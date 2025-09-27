@@ -28,6 +28,8 @@ process it.
 
 https://www.figma.com/design/v6O9o8ZKQVNxI3b5rgmLnR/Hackathon?node-id=90-4&p=f
 
+<img width="1296" height="807" alt="image" src="https://github.com/user-attachments/assets/51b57abf-e934-4d23-995e-eb418046f773" />
+
 ### Features
 
 1. Users can add files sequentially and see the graph being built out.
