@@ -1,0 +1,132 @@
+from langchain_core.documents import Document
+from langchain_experimental.graph_transformers import LLMGraphTransformer
+from langchain_google_vertexai import ChatVertexAI
+from utils import visualize_graph_documents
+from extract_names import get_normalized_path
+from typing import List, Optional 
+from langchain_community.graphs.graph_document import GraphDocument, Node, Relationship
+from pathlib import Path 
+import asyncio 
+import json 
+import os 
+
+ITERATION_NUMBER = os.getenv("ITERATION_NUMBER")
+MODEL_NAME = os.getenv("MODEL_NAME")
+PROJECT_ID = os.getenv("PROJECT_ID")
+
+llm = ChatVertexAI(model_name = MODEL_NAME, project = PROJECT_ID, location='global')
+
+allowed_nodes = ["Person", "Organization", "Government body", "Company", "Political Party", "Location"]
+node_properties=["accused_of_crimes"]
+
+def enhance_graph_prompt(initial_documents: List[Document], all_nodes: List[Node], all_relationships: List[Relationship])-> str:
+    return (
+            f"Original Text:\n{initial_documents[0].page_content}\n\n"
+            f"We have already extracted the following graph. Review it and extract "
+            f"any additional nodes, relationships and properties from the original text that might be missing.\n\n"
+            f"Current Nodes:\n{all_nodes}\n\n"
+            f"Current Relationships:\n{all_relationships}"
+        )
+
+async def iterative_graph_development(number_iterations: int, initial_documents: List[Document],
+                                      initial_nodes: List[Node], initial_relationships: List[Relationship]) -> List[GraphDocument]:
+    # Use a single, consistent transformer instance.
+    # It uses its default prompt which is designed to find entities and relationships.
+    transformer = LLMGraphTransformer(llm=llm, 
+                                      allowed_nodes = allowed_nodes,
+                                      node_properties= True, 
+                                      relationship_properties=True)
+
+    # Start with the initial documents
+    current_documents = initial_documents
+    graph = None
+    all_nodes: List[Node] = initial_nodes
+    all_relationships: List[Relationship] = initial_relationships
+    initial_page_content = Document(page_content = initial_documents[0].page_content)
+    for i in range(number_iterations):
+        print(f"--- Iteration {i+1} ---")
+        # The core of the transformer: convert documents to a graph
+        graph_documents = await transformer.aconvert_to_graph_documents(current_documents)
+        graph = graph_documents[0]
+        
+        all_nodes.extend(graph.nodes)
+        all_relationships.extend(graph.relationships)
+        
+        # Combine the original text with the current graph state
+        updated_content = enhance_graph_prompt(initial_documents, all_nodes, all_relationships)
+        
+        # Create a new Document object for the next loop
+        current_documents = [Document(page_content=updated_content)]
+
+    # Return the final graph from the last iteration
+    return [GraphDocument(nodes=all_nodes, relationships=all_relationships,source = initial_page_content)]
+
+def get_file_number(folder_path:str) -> int:
+    return len([_ for _ in Path(folder_path).iterdir()])
+
+def get_documents_from_files(files: List[str]) -> List[Document]:
+    documents: List[Document] = []
+    try:
+        #files = Path("transcripts").iterdir()
+        for file in files:
+            with open(file, mode = 'r') as file:
+                documents.append(Document(page_content = file.read()))
+        
+        if not documents:
+            print("Error: 'transcripts' directory is empty or missing files.")
+            return []
+
+    except FileNotFoundError:
+        print("Error: The 'transcripts' directory was not found. Please create it and add text files.")
+        return []
+
+    documents = [Document(page_content ="\n".join([document.page_content for document in documents]))]
+    
+    assert (len(documents) == 1)
+    return documents
+
+async def process_document(document_file_path: str, iteration_number: int, previous_graph: Optional[GraphDocument]) -> str:
+    documents: List[Document] = get_documents_from_files([document_file_path])
+    
+    if previous_graph is not None:
+        prompt = enhance_graph_prompt([previous_graph.source],previous_graph.nodes,previous_graph.relationships)
+        documents = [Document(prompt)]
+    
+    data = await iterative_graph_development(iteration_number, documents, initial_nodes= [] if previous_graph is None else previous_graph.nodes,
+                                            initial_relationships= [] if previous_graph is None else previous_graph.relationships)
+    
+    norm_path = get_normalized_path(document_file_path)
+    final_path = f"extracted_graphs/excu_graph_{norm_path}.json"
+
+    with open(final_path, mode = 'w') as file:
+        json.dump(data[0].model_dump(), file)
+
+    visualize_graph_documents([data[0]],output_filename=f"output_graphs/out_graph_{norm_path}.html")
+    return final_path
+
+async def main():
+    files = [_ for _ in Path("output_transcripts").iterdir()]
+    tasks = []
+    async with asyncio.TaskGroup() as tg:
+        tasks = [tg.create_task(process_document(str(file),ITERATION_NUMBER,None)) for file in files]
+    for task in tasks:
+        result = task.result()
+        print(f"Finished: {result}")
+
+def unite_graphs():
+    normalized_paths = [get_normalized_path(str(file_path)) for file_path in Path("output_transcripts").iterdir()]
+    united_graph_nodes: List[Node] = []
+    united_graph_relationships: List[Relationship] = []
+    for normalized_path in normalized_paths:
+        final_path = f"extracted_graphs/excu_graph_{normalized_path}.json"
+        try:
+            with open(final_path, mode='r') as file:
+                curr_graph = GraphDocument.model_validate(json.load(file))
+        except:
+            continue
+        united_graph_nodes.extend(curr_graph.nodes)
+        united_graph_relationships.extend(curr_graph.relationships)
+    
+    final_graph = GraphDocument(nodes = united_graph_nodes, relationships=united_graph_relationships, source = Document(''))
+
+    visualize_graph_documents([final_graph],output_filename=f"the_big_answer.html")
