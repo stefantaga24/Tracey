@@ -24,6 +24,10 @@ process it.
 
 <img width="1390" height="668" alt="image" src="https://github.com/user-attachments/assets/3f735329-85d2-43e9-9711-1bf30b4a97d3" />
 
+### Future design for the application
+
+https://www.figma.com/proto/v6O9o8ZKQVNxI3b5rgmLnR/Hackathon?node-id=25-51&p=f&t=Uk8la9DznkLSBsA5-1&scaling=min-zoom&content-scaling=fixed&page-id=0%3A1&starting-point-node-id=25%3A51
+
 ### Features
 
 1. Users can add files sequentially and see the graph being built out.
