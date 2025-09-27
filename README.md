@@ -26,7 +26,7 @@ process it.
 
 ### Future design for the application
 
-https://www.figma.com/proto/v6O9o8ZKQVNxI3b5rgmLnR/Hackathon?node-id=25-51&p=f&t=Uk8la9DznkLSBsA5-1&scaling=min-zoom&content-scaling=fixed&page-id=0%3A1&starting-point-node-id=25%3A51
+https://www.figma.com/design/v6O9o8ZKQVNxI3b5rgmLnR/Hackathon?node-id=90-4&p=f
 
 ### Features
 
