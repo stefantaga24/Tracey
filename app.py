@@ -116,7 +116,7 @@ if 'graph' not in st.session_state:
 with st.sidebar:
     st.header("⚙️ Configuration")
     project_id = st.text_input("Google Cloud Project ID", placeholder="your-gcp-project-id")
-    model_name = st.text_input("Vertex AI Model Name", "gemini-1.5-flash-001")
+    model_name = st.text_input("Vertex AI Model Name", "gemini-2.0-flash")
     iteration_number = st.slider("Number of Refinement Iterations", 1, 5, 2)
     
     if st.button("Reset Knowledge Graph", use_container_width=True):
