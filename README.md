@@ -11,3 +11,6 @@ In our case, we parsed 50 transcripts of videos exploring the deep connections b
 2. Build the docker image: ```docker build tracey:0.0.1 Dockerfile-prod .```
 3. Run the docker image and port-forward the Streamlit application: ```docker run -d -p 8501:8501 tracey:0.0.1```
 
+### Example part of our visualization
+
+<img width="1390" height="668" alt="image" src="https://github.com/user-attachments/assets/3f735329-85d2-43e9-9711-1bf30b4a97d3" />
