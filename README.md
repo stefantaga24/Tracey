@@ -11,6 +11,20 @@ In our case, we parsed 50 transcripts of videos exploring the deep connections b
 2. Build the docker image: ```docker build tracey:0.0.1 Dockerfile-prod .```
 3. Run the docker image and port-forward the Streamlit application: ```docker run -d -p 8501:8501 tracey:0.0.1```
 
+In order to access all features, you should have a service-google-account.json key, setup a google api key and project and set the following environment variables, in a .env environment:
+
+GOOGLE_API_KEY="" 
+GEMINI_API_KEY="" (same as GEMINI API KEY)
+GOOGLE_APPLICATION_CREDENTIALS="service-google-account.json"
+
+In order to see only the visualization, you can just set something random in the google project id section in order to
+process it.
+
 ### Example part of our visualization
 
 <img width="1390" height="668" alt="image" src="https://github.com/user-attachments/assets/3f735329-85d2-43e9-9711-1bf30b4a97d3" />
+
+### Features
+
+1. Users can add files sequentially and see the graph being built out.
+2. Users can give a folder full of txt files and the AI will build a graph from all of the information.
