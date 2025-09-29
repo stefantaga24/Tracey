@@ -8,7 +8,7 @@ In our case, we parsed 50 transcripts of videos exploring the deep connections b
 ### How to run the app
 
 1. Clone the repository
-2. Build the docker image: ```docker build tracey:0.0.1 Dockerfile-prod .```
+2. Build the docker image: ```docker build -t tracey:0.0.1 -f Dockerfile-prod .```
 3. Run the docker image and port-forward the Streamlit application: ```docker run -d -p 8501:8501 tracey:0.0.1```
 
 In order to access all features, you should have a service-google-account.json key, setup a google api key and project and set the following environment variables, in a .env environment:
